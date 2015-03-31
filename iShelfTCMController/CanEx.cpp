@@ -3,7 +3,7 @@
 
 using namespace std;
 
-#define CAN_SEND_TIMEOUT	100
+#define CAN_SEND_TIMEOUT	500
 
 namespace CANExtended
 {

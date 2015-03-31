@@ -44,9 +44,12 @@ osTimerDef(TimerHB, SystemHeartbeat);
 
 void HeartbeatArrival(uint16_t sourceId, CANExtended::DeviceState state)
 {
+#ifdef DEBUG_PRINT
 	static int dc =0;
+#endif
 	if (state != CANExtended::Operational)
 		return;
+	CanEx->Sync(sourceId, SYNC_LIVE, CANExtended::Trigger); //Confirm & Stop
 	if (sourceId & 0x100)
 	{
 		boost::shared_ptr<StorageUnit> unit = unitManager.FindUnit(sourceId);
@@ -61,7 +64,6 @@ void HeartbeatArrival(uint16_t sourceId, CANExtended::DeviceState state)
 			unit->WriteCommandResponse.bind(ethEngine.get(), &NetworkEngine::DeviceWriteResponse);
 			unitManager.Add(sourceId, unit);
 		}
-		CanEx->Sync(sourceId, SYNC_LIVE, CANExtended::Trigger); //Confirm & Stop
 	}
 }
 
@@ -78,22 +80,22 @@ osThreadDef(UpdateWorker, osPriorityNormal, 1, 0);
 
 static void UpdateUnits(void const *argument)  //Prevent missing status
 {
-	osDelay(500);
+	osDelay(2000);
 	std::map<std::uint16_t, boost::shared_ptr<StorageUnit> > &unitList = unitManager.GetList();
 	while(1)
 	{
-		//CanEx->SyncAll(SYNC_LIVE, CANExtended::Trigger);
-		for(UnitManager::UnitIterator it = unitList.begin(); it!= unitList.end(); ++it)
-		{
-			if (!it->second->IsBusy())
-			{
-				CanEx->Sync(it->second->DeviceId, SYNC_DATA, CANExtended::Trigger);
-				osDelay(10);
-			}
-		}
-		if (ethEngine.get()!=NULL) 
+		CanEx->SyncAll(SYNC_DATA, CANExtended::Trigger);
+//		for(UnitManager::UnitIterator it = unitList.begin(); it!= unitList.end(); ++it)
+//		{
+//			if (!it->second->IsBusy())
+//			{
+//				CanEx->Sync(it->second->DeviceId, SYNC_DATA, CANExtended::Trigger);
+//				//osDelay(50);
+//			}
+//		}
+		if (ethEngine.get()!=NULL)
 			ethEngine->InventoryRfid();
-//		osDelay(200);
+		osDelay(500);
 	}
 }
 osThreadDef(UpdateUnits, osPriorityNormal, 1, 0);
@@ -139,13 +141,6 @@ int main()
 	
 	osThreadCreate(osThread(UpdateWorker), NULL);
 	osThreadCreate(osThread(UpdateUnits), NULL);
-	
-	//Search all units
-//	for(int8_t i=1;i<0x7f;++i)
-//	{
-//		CanEx->Sync(i|0x100, SYNC_LIVE, CANExtended::Trigger);
-//		osDelay(100);
-//	}
 	
   while(1) 
 	{
