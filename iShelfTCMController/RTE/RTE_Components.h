@@ -4,7 +4,7 @@
  *      *** Do not modify ! ***
  *
  * Project: 'iShelfTCMController' 
- * Target:  'Release' 
+ * Target:  'Debug' 
  */
 
 #ifndef RTE_COMPONENTS_H
@@ -41,7 +41,7 @@
         #define RTE_Drivers_USART7              /* Driver USART7 */
         #define RTE_Drivers_USART8              /* Driver USART8 */
 #define RTE_Network_Core                /* Network Core */
-          #define RTE_Network_Release             /* Network Release Version */
+          #define RTE_Network_Debug               /* Network Debug Version */
 #define RTE_Network_Interface_ETH_0     /* Network Interface ETH 0 */
 #define RTE_Network_Socket_TCP          /* Network Socket TCP */
 #define RTE_Network_Socket_UDP          /* Network Socket UDP */

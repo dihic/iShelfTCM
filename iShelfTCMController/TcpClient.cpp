@@ -152,7 +152,6 @@ extern "C"
 #ifdef DEBUG_PRINT
 				cout<<"Aborted Tcp connection!"<<endl;
 #endif
-				client->AbortConnection();
 				break;
 			case tcpEventACK:
 				// Previously sent data acknowledged
@@ -264,7 +263,6 @@ void TcpClient::TcpProcessor(void const *argument)
 		if (client.tcpSocket && client.conn)
 		{
 			client.conn = false;
-			//tcp_close(client.tcpSocket);
 			client.AbortConnection();
 		}
 		return;
@@ -311,25 +309,10 @@ void TcpClient::TcpProcessor(void const *argument)
 
 void TcpClient::Start()
 {
-//	if (threadRx_id == NULL)
-//	{
-//		osThreadDef_t thread_t;
-//		thread_t.pthread = RxProcessor;
-//		thread_t.tpriority = osPriorityNormal;
-//		thread_t.instances = 1;
-//		thread_t.stacksize = 0;
-//		threadRx_id = osThreadCreate(&thread_t, this);
-//	}
-//  threadTx_id = osThreadGetId();
 }
 
 void TcpClient::Stop()
 {
-//	if (threadRx_id)
-//	{
-//		osThreadTerminate(threadRx_id);
-//		threadRx_id = NULL;
-//	}
 	if (tcpSocket)
 	{
 		tcp_close(tcpSocket);
@@ -341,7 +324,7 @@ bool TcpClient::SendData(const uint8_t *buf, size_t len)
 {
 	if (!IsConnected())
 		return false;
-	
+
 	return true;
 }
 
@@ -367,9 +350,9 @@ void TcpClient::AbortConnection()
 		// This TCP connection needs to close immediately
 		tcp_abort (tcpSocket);
 //		// Socket will not be needed any more 
-//		tcp_release_socket (tcpSocket);
-//		tcp_table.erase(tcpSocket);
-//		tcpSocket = NULL;
+		tcp_release_socket (tcpSocket);
+		tcp_table.erase(tcpSocket);
+		tcpSocket = NULL;
 	}
 }
 

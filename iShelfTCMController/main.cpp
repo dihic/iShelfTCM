@@ -84,18 +84,18 @@ static void UpdateUnits(void const *argument)  //Prevent missing status
 	std::map<std::uint16_t, boost::shared_ptr<StorageUnit> > &unitList = unitManager.GetList();
 	while(1)
 	{
-		CanEx->SyncAll(SYNC_DATA, CANExtended::Trigger);
-//		for(UnitManager::UnitIterator it = unitList.begin(); it!= unitList.end(); ++it)
-//		{
-//			if (!it->second->IsBusy())
-//			{
-//				CanEx->Sync(it->second->DeviceId, SYNC_DATA, CANExtended::Trigger);
-//				//osDelay(50);
-//			}
-//		}
+		//CanEx->SyncAll(SYNC_DATA, CANExtended::Trigger);
+		for(UnitManager::UnitIterator it = unitList.begin(); it!= unitList.end(); ++it)
+		{
+			if (!it->second->IsBusy())
+			{
+				CanEx->Sync(it->second->DeviceId, SYNC_DATA, CANExtended::Trigger);
+				osDelay(10);
+			}
+		}
 		if (ethEngine.get()!=NULL)
 			ethEngine->InventoryRfid();
-		osDelay(500);
+		//osDelay(500);
 	}
 }
 osThreadDef(UpdateUnits, osPriorityNormal, 1, 0);
