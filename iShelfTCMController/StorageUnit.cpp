@@ -52,9 +52,13 @@ namespace IntelliStorage
 	void StorageUnit::ProcessRecievedEvent(boost::shared_ptr<CANExtended::OdEntry> entry)
 	{
 		CanDevice::ProcessRecievedEvent(entry);
-		
+		//Notice device that host has got the process data
+		canex.Sync(DeviceId, SYNC_GOTCHA, CANExtended::Trigger);
 		std::uint8_t *rawData = entry->GetVal().get();
-		if (lastCardType == rawData[0])
+		string id;
+		if (rawData[0]!=0)
+			id = GenerateId(rawData+1, 8);	//Generate temporary rfid id when got one
+		if (lastCardType==rawData[0] && cardId==id) //identical
 			return;
 		lastCardType = rawData[0];
 		switch (rawData[0])
@@ -63,12 +67,14 @@ namespace IntelliStorage
 				cardState = CardLeft;
 				break;
 			case 1:
+				cardState = CardArrival;
+				cardId = id;
+				presId.clear();
 				break;
 			case 2:
 				cardState = CardArrival;
-				cardId.clear();
+				cardId = id;
 				presId.clear();
-				cardId = GenerateId(rawData+1, 8);
 				presId.append(reinterpret_cast<char *>(rawData+10), rawData[9]);
 				break;
 			default:

@@ -8,6 +8,7 @@
 namespace IntelliStorage
 {
 #define SYNC_DATA				0x0100
+#define SYNC_GOTCHA			0x0180
 #define SYNC_LIVE				0x01ff
 	
 	
@@ -25,8 +26,8 @@ namespace IntelliStorage
 		private:
 			static string GenerateId(const uint8_t *id, size_t len);
 			uint8_t lastCardType;
-			bool cardChanged;
-			std::uint8_t cardState;
+			volatile bool cardChanged;
+			volatile std::uint8_t cardState;
 			std::string cardId;
 			std::string presId;
 		public:
