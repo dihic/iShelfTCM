@@ -642,7 +642,7 @@ bool UpdateRfid()
 			failCount = 0;
 			do
 			{
-				Iso15693ReadSingleBlockWithAddress(0, UID, cardInfo->GetHeader());
+				suc = Iso15693ReadSingleBlockWithAddress(0, UID, cardInfo->GetHeader());
 				DELAY(1000);
 			} while (suc && ++failCount<10);
 			
@@ -671,7 +671,7 @@ bool UpdateRfid()
 				else
 				{
 					*pRfidCardType = 0x01;
-					memset(cardInfo->UID, 0, 8);
+					memcpy(cardInfo->UID, UID, 8);
 				}
 			}
 			RefreshDisplay();
