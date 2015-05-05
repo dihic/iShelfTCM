@@ -622,7 +622,6 @@ void AckReciever()
 bool UpdateRfid()
 {	
 	static uint8_t UIDlast[8];
-	//static uint8_t found = 0;
 	static uint32_t lostCount = 0;
 	
 	bool result = false;
@@ -695,7 +694,6 @@ bool UpdateRfid()
 				result = true;
 				*pRfidCardType = 0x00;
 				memset(UIDlast, 0, 8);
-				lostCount=100;
 				RefreshDisplay();
 			}
 		}
@@ -756,7 +754,10 @@ int main()
 			DataLock = true;
 			bool updated = UpdateRfid();
 			if (Registered && (updated || ForceSync))
+			{
+				ForceSync = false;
 				Gotcha = false;
+			}
 			DataLock = false;
 		}
 		
