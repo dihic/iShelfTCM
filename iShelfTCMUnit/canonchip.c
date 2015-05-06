@@ -26,7 +26,8 @@ CanRom **rom = (CanRom **)0x1fff1ff8;
 CAN_MSG_OBJ msg_objs[33];
 CAN_MSG_OBJ filter_objs[2];
 
-volatile uint32_t msgSignals=0;
+volatile uint32_t msgSignals = 0;
+volatile int tx_count = 0;
 
 ReceiverEventHandler CANEXReceiverEvent = NULL;
 TriggerSyncEventHandler CANTEXTriggerSyncEvent = NULL;
@@ -180,6 +181,7 @@ void CAN_rx(uint8_t msg_obj_num)
 void CAN_tx(uint8_t msg_obj_num)
 {
 	msgSignals &= ~(1<<msg_obj_num);
+	--tx_count;
 }
 
 /*	CAN error callback */
@@ -329,23 +331,31 @@ void CANTransmit(uint32_t command,uint16_t targetId,CAN_ODENTRY *entry,uint16_t 
 	msg.data[1] = (entry->index>>8) & 0xff;
 	msg.data[2] =  entry->subindex;
 	msg.data[3] =  entry->entrytype_len;
+	
+	//Wait for last entry transmitted
+	while (tx_count>0)
+		__nop();
+	
 	if (entry->entrytype_len<=4)
 	{
 		msg.dlc = 4 + entry->entrytype_len;
 		memcpy(msg.data+4, entry->val, entry->entrytype_len);
+		tx_count = 1;
 		CANSend(&msg);
 		return;
 	}
 
-	msg.dlc = 8;
-	memcpy(msg.data+4, entry->val, 4);
-	CANSend(&msg);
-	
 	segment 	= (entry->entrytype_len-4) / 7;
 	remainder = (entry->entrytype_len-4) % 7;
 	offset=4;
 	if (remainder!=0)
 		segment++;
+	
+	tx_count = segment+1;
+	
+	msg.dlc = 8;
+	memcpy(msg.data+4, entry->val, 4);
+	CANSend(&msg);
 	
 	for(i=0; i<segment; ++i)
 	{

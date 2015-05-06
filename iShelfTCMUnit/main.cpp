@@ -106,6 +106,7 @@ struct CanResponse
 CanResponse res;
 
 volatile bool syncTriggered = false;
+volatile bool responseTriggered = false;
 volatile CAN_ODENTRY syncEntry;
 
 float CurrentNetWeight=0;
@@ -380,19 +381,16 @@ void DrawNoticeBar();
 
 void CanexReceived(uint16_t sourceId, CAN_ODENTRY *entry)
 {
-//	uint8_t i;
-//	uint8_t buf[0x20];
-	
-	CAN_ODENTRY *response=&(res.response);
+	CAN_ODENTRY *response=const_cast<CAN_ODENTRY *>(&(res.response));
 
 	res.sourceId = sourceId;
 	res.result=0xff;
 	
-	response->val  = &(res.result);
+	response->val = const_cast<uint8_t *>(&(res.result));
 	response->index = entry->index;
 	response->subindex = entry->subindex;
 	response->entrytype_len = 1;
-	
+
 	switch (entry->index)
 	{
 		case 0:	//system config
@@ -478,8 +476,9 @@ void CanexReceived(uint16_t sourceId, CAN_ODENTRY *entry)
 				*(response->val)=0;
 			}
 			break;
-		}
-	CANEXResponse(sourceId,response);
+	}
+	//CANEXResponse(sourceId,response);
+	responseTriggered = true;
 }
 
 void CanexSyncTrigger(uint16_t index, uint8_t mode)
@@ -759,6 +758,12 @@ int main()
 				Gotcha = false;
 			}
 			DataLock = false;
+		}
+		
+		if (responseTriggered)
+		{
+			CANEXResponse(res.sourceId, const_cast<CAN_ODENTRY *>(&(res.response)));
+			responseTriggered = false;
 		}
 		
 		if (syncTriggered)
